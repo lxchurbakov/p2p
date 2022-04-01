@@ -23,7 +23,7 @@ node.listen(port, () => {
   console.log(``);
   console.log(`Write "connect IP:PORT" to connect to other nodes.`);
   console.log(`Write "name NAME" to change your name.`);
-  console.log(`Write "message MESSSAGE" to send broadcast message to other nodes.`);
+  console.log(`Type anything else to send it to everyone on the network`);
   console.log(``);
   console.log(`Your name is "${name}"`);
 
