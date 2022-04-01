@@ -60,13 +60,24 @@ module.exports = (options) => {
 
     // Return a disconnect function so you can
     // exclude the node from the list
-    return () => socket.close();
+    return (cb) => socket.destroy(cb);
   };
 
   // A method to actually start the server
   const listen = (port, cb) => {
     server.listen(port, '0.0.0.0', cb);
-    return () => server.close();
+
+    return (cb) => server.close(cb);
+  };
+
+  // One method to close all open connections
+  // and server itself
+  const close = (cb) => {
+    for (let [connectionId, socket] of connections) {
+      socket.destroy();
+    }
+
+    server.close(cb);
   };
 
   //
@@ -87,7 +98,7 @@ module.exports = (options) => {
 
   // Once connection is established, send the handshake message
   emitter.on('_connect', (connectionId) => {
-    send(connectionId, { type: 'handshake', data: { nodeId: NODE_ID } });
+    _send(connectionId, { type: 'handshake', data: { nodeId: NODE_ID } });
   });
 
   // On message we check whether it's a handshake and add
@@ -139,10 +150,11 @@ module.exports = (options) => {
   // A method to send packet to other nodes (all neightbors)
   const sendPacket = (packet) => {
     for (const $nodeId of neighbors.keys()) {
-      sendPacket($nodeId, packet);
+
       // TODO decide on whether to send or not by strategy, maybe put this
       // code to on 'message' handler (like we have received that message but not sent)
       alreadySentMessages.add(packet.id);
+      send($nodeId, packet);
     }
   };
 
@@ -185,8 +197,8 @@ module.exports = (options) => {
   });
 
   return {
-    listen, connect,
+    listen, connect, close,
     broadcast, direct,
-    on: emitter.on,
+    on: emitter.on.bind(emitter),
   };
 };

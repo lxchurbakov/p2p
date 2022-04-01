@@ -1,0 +1,19 @@
+{
+  "name": "node-p2p",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swensson/node-p2p.git"
+  },
+  "author": "swensson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/swensson/node-p2p/issues"
+  },
+  "homepage": "https://github.com/swensson/node-p2p#readme"
+}
