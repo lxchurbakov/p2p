@@ -62,3 +62,7 @@ node.close(() => {
 ### Chat
 
 Run chat application with `node examples/chat PORT`. If you want to test it locally, run several instances of the chat and connect them using `connection IP:PORT` to any other instances, creating a p2p network. Send a message simply typing anything in the console.
+
+## Other
+
+[There is an article about this repo.](https://dev.to/swensson/create-a-p2p-network-with-node-from-scratch-1pah)
