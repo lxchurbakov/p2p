@@ -1,4 +1,4 @@
-const createNode = require('../src');
+const createNode = require('../../src');
 const EventEmitter = require('events');
 
 const randomItem = (c) => c[Math.floor(Math.random() * c.length)];

@@ -200,5 +200,7 @@ module.exports = (options) => {
     listen, connect, close,
     broadcast, direct,
     on: emitter.on.bind(emitter),
+
+    NODE_ID, neighbors
   };
 };
