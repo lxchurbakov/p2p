@@ -211,8 +211,9 @@ module.exports = (options) => {
     listen, connect, close,
     broadcast, direct,
     on: emitter.on.bind(emitter),
-    once: emitter.once.bind(emitter),
-
-    NODE_ID, neighbors
+    id: NODE_ID,
+    //
+    // once: emitter.once.bind(emitter),
+    // NODE_ID, neighbors
   };
 };
