@@ -33,6 +33,7 @@ context.scale(pixelDensity, pixelDensity);
 // let nodes = [{ x:100, y: 100}, { x:101, y: 101 }, { x:102, y: 102 }];
 let nodes = {};
 let edges = [];
+let mps = 0;
 
 const updateState = async () => {
   const stats = await fetchStats();
@@ -53,6 +54,7 @@ const updateState = async () => {
 
   // simply copy edges
   edges = stats.edges;
+  mps = stats.mps;
 };
 
 setInterval(() => {
@@ -118,6 +120,10 @@ const render = () => {
     context.font = 'bold 21px monospace';
     context.fillText(id.substr(0, 4).toUpperCase(), x, y + 6);
   });
+
+  context.textAlign = 'center';
+  context.font = '18px monospace';
+  context.fillText('Messages per second:' + mps.toString(), width / 2, height - 50);
 
   requestAnimationFrame(render);
 };

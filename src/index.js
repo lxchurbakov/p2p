@@ -26,10 +26,23 @@ module.exports = (options) => {
     });
 
     socket.on('data', (data) => {
-      emitter.emit('_message', { connectionId, message: JSON.parse(data.toString()) });
-    });
+      // TODO JSON.parse error handling + socket on error
+      // + TODO remove delimeter
+      const messages = data.toString().split('}s{');
 
-    // TODO JSON.parse error handling + socket on error
+      if (messages.length > 1) {
+        for (let i = 0; i < messages.length - 1; ++i) {
+          messages[i] += '}s';
+        }
+        for (let i = 1; i < messages.length; ++i) {
+          messages[i] = '{' + messages[i];
+        }
+      }
+
+      messages.forEach((m) => {
+        emitter.emit('_message', { connectionId, message: JSON.parse(m.substr(0, m.length - 1)) });
+      });
+    });
   };
 
   // Create a server itself and make it able to handle
@@ -45,7 +58,7 @@ module.exports = (options) => {
       throw new Error(`Attempt to send data to connection that does not exist ${connectionId}`);
     }
 
-    socket.write(JSON.stringify(message));
+    socket.write(JSON.stringify(message) + 's'); // TODO
   };
 
   // A method for the libabry consumer to
@@ -145,15 +158,11 @@ module.exports = (options) => {
   // Layer 3 - here we can actually send data OVER
   // other nodes by doing recursive broadcast
   //
-  const alreadySentMessages = new Set();
+  const alreadySeenMessages = new Set();
 
   // A method to send packet to other nodes (all neightbors)
   const sendPacket = (packet) => {
     for (const $nodeId of neighbors.keys()) {
-
-      // TODO decide on whether to send or not by strategy, maybe put this
-      // code to on 'message' handler (like we have received that message but not sent)
-      alreadySentMessages.add(packet.id);
       send($nodeId, packet);
     }
   };
@@ -174,8 +183,10 @@ module.exports = (options) => {
     // First of all we decide, whether this message at
     // any point has been send by us. We do it in one
     // place to replace with a strategy later TODO
-    if (alreadySentMessages.has(packet.id) || packet.ttl < 1) {
+    if (alreadySeenMessages.has(packet.id) || packet.ttl < 1) {
       return;
+    } else {
+      alreadySeenMessages.add(packet.id);
     }
 
     // Let's pop up the broadcast message and send it
@@ -191,7 +202,7 @@ module.exports = (options) => {
       if (packet.destination === NODE_ID) {
         emitter.emit('direct', { origin: packet.origin, message: packet.message });
       } else {
-        direct(data.destination, data.message, data.id, data.origin, data.ttl - 1);
+        direct(packet.destination, packet.message, packet.id, packet.origin, packet.ttl - 1);
       }
     }
   });
@@ -200,6 +211,7 @@ module.exports = (options) => {
     listen, connect, close,
     broadcast, direct,
     on: emitter.on.bind(emitter),
+    once: emitter.once.bind(emitter),
 
     NODE_ID, neighbors
   };
