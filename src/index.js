@@ -11,11 +11,13 @@ module.exports = (options) => {
   //
   const connections = new Map();
   const emitter = new EventEmitter();
+  const addresses = new Set();
 
   // Handle all TCP connections same way, no matter
   // if it's incoming or outcoming, we're p2p
   const handleNewSocket = (socket) => {
     const connectionId = randomuuid();
+    addresses.add(socket.remoteAddress);
 
     connections.set(connectionId, socket);
     emitter.emit('_connect', connectionId);
@@ -211,7 +213,7 @@ module.exports = (options) => {
     listen, connect, close,
     broadcast, direct,
     on: emitter.on.bind(emitter),
-    id: NODE_ID,
+    id: NODE_ID, addresses,
     //
     // once: emitter.once.bind(emitter),
     // NODE_ID, neighbors
