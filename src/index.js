@@ -1,5 +1,6 @@
 const net = require('net');
 const EventEmitter = require('events');
+const splitStream = require('./split-stream');
 
 const random4digithex = () => Math.random().toString(16).split('.')[1].substr(0, 4);
 const randomuuid = () => new Array(8).fill(0).map(() => random4digithex()).join('-');
@@ -27,23 +28,8 @@ module.exports = (options) => {
       emitter.emit('_disconnect', connectionId);
     });
 
-    socket.on('data', (data) => {
-      // TODO JSON.parse error handling + socket on error
-      // + TODO remove delimeter
-      const messages = data.toString().split('}s{');
-
-      if (messages.length > 1) {
-        for (let i = 0; i < messages.length - 1; ++i) {
-          messages[i] += '}s';
-        }
-        for (let i = 1; i < messages.length; ++i) {
-          messages[i] = '{' + messages[i];
-        }
-      }
-
-      messages.forEach((m) => {
-        emitter.emit('_message', { connectionId, message: JSON.parse(m.substr(0, m.length - 1)) });
-      });
+    socket.pipe(splitStream()).on('data', (message) => {
+      emitter.emit('_message', { connectionId, message });
     });
   };
 
@@ -60,7 +46,7 @@ module.exports = (options) => {
       throw new Error(`Attempt to send data to connection that does not exist ${connectionId}`);
     }
 
-    socket.write(JSON.stringify(message) + 's'); // TODO
+    socket.write(JSON.stringify(message));
   };
 
   // A method for the libabry consumer to
