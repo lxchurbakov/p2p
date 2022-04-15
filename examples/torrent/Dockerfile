@@ -1,6 +1,9 @@
 FROM node:alpine
 WORKDIR /app
 
-COPY index.js
+COPY index.js ./
+COPY package.json ./
 
-CMD ["node", "index.js", "8090"]
+RUN npm install
+
+CMD ["node", "index.js", "30162"]

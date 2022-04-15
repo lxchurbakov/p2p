@@ -46,7 +46,7 @@ async function* findFiles (folder) {
   }
 }
 
-;(async () => {
+const indexFiles = async () => {
   console.log('🌱 Indexing files...');
 
   for await (let { path, size } of findFiles(process.cwd())) {
@@ -57,13 +57,17 @@ async function* findFiles (folder) {
   }
 
   console.log(`🌳 Directory content indexed, ${index.size} files found.`);
-})();
+};
+
+indexFiles();
+
+setInterval(() => indexFiles(), 60000);
 
 // Step 2: create P2P node with swenssonp2p and run it on the port
 // provided inside argv. I don't know exactly what I will be doing
 // once it's up, so I leave a socket there
 const main = new EventEmitter();
-const createNode = require('../../src');
+const createNode = require('swenssonp2p');
 
 const node = createNode();
 const port = Number(process.argv[2]);
@@ -229,7 +233,7 @@ node.on('broadcast', ({ origin, message: { type, meta } }) => {
     const data = index.get(meta);
 
     if (!!data) {
-      node.direct(origin, { type: 'download/response', meta: { ip: Array.from(node.addresses)[0], hash: data.hash, size: data.size, name: data.name } })
+      node.direct(origin, { type: 'download/response', meta: { ip: ip, hash: data.hash, size: data.size, name: data.name } })
     }
   }
 });
@@ -255,7 +259,7 @@ node.on('direct', ({ origin, message: { type, meta } }) => {
 
 // Step 7: now I setup the TCP server to accept file downloading connections
 // and send chunks of data, no safety implemented
-const FILES_SERVER_PORT = 9019;
+const FILES_SERVER_PORT = 30163;
 const CHUNK_SIZE = 512;
 
 const filesServer = net.createServer((socket) => {
@@ -300,7 +304,7 @@ const DOWNLOADS_PATH = path.resolve(process.cwd(), '.downloads');
 })();
 
 main.on('download/ready', async (hash) => {
-  console.log('START', hash)
+  console.log('Downloading', hash);
   downloads[hash].path = path.resolve(DOWNLOADS_PATH, `${hash}.download`);
   downloads[hash].chunks = [...new Array(Math.ceil(downloads[hash].size / CHUNK_SIZE))].map(() => ({ state: 0 }));
 
@@ -362,4 +366,6 @@ main.on('download/ready', async (hash) => {
   for (let { socket } of Object.values(sockets)) {
     socket.destroy();
   }
+
+  console.log('Download completed', hash);
 });
