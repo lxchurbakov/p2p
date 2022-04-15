@@ -70,6 +70,72 @@ const port = Number(process.argv[2]);
 
 setTimeout(() => node.listen(port, () => main.emit('startup', port)), 0);
 
+// Step 2.5: add rebalancing to the nodes (ask for neighbors and connect to them randomly)
+// every 10 seconds we ask for neighbors' neighbors and connect to them until we have 5 connections
+const NEIGHBORS_COUNT_TARGET = 5;
+let ip = '127.0.0.1';
+
+require('https').get('https://api.ipify.org?format=text', (responseStream) => {
+  let data = '';
+  responseStream.on('data', (chunk) => data += chunk).on('end', () => {
+    ip = data;
+  });
+});
+
+const getNeighbors = (id) => new Promise((resolve) => {
+  const listener = ({ origin, message: { type, meta }}) => {
+    if (type === 'balance/response' && id === origin) {
+      resolve(meta);
+      node.off('direct', listener);
+    }
+  };
+
+  node.on('direct', listener);
+  node.direct(id, { type: 'balance', meta: {} });
+});
+
+const getIp = (id) => new Promise((resolve) => {
+  const listener = ({ origin, message: { type, meta }}) => {
+    if (type === 'ip/response' && id === origin) {
+      resolve(meta);
+      node.off('direct', listener);
+    }
+  };
+
+  node.on('direct', listener);
+  node.direct(id, { type: 'ip', meta: {} });
+});
+
+node.on('direct', ({ origin, message: { type } }) => {
+  if (type === 'ip') {
+    node.direct(origin, { type: 'ip/response', meta: { ip, port } });
+  }
+});
+
+node.on('direct', ({ origin, message: { type } }) => {
+  if (type === 'balance') {
+    const neighbors = Array.from(node.neighbors());
+
+    node.direct(origin, { type: 'balance/response', meta: neighbors });
+  }
+});
+
+main.on('startup', () => {
+  setInterval(async () => {
+    const neighbors = Array.from(node.neighbors());
+    const neighborsOfNeighborsGroups = await Promise.all(neighbors.map((id) => getNeighbors(id)));
+    const neighborsOfNeighbors = neighborsOfNeighborsGroups.reduce((acc, group) => acc.concat(group), []);
+    const potentialConnections = neighborsOfNeighbors.filter((id) => id !== node.id && !neighbors.includes(id));
+    const addressesToConnect = await Promise.all(potentialConnections.map((id) => getIp(id)));
+
+    for (let { ip, port } of addressesToConnect.slice(0, NEIGHBORS_COUNT_TARGET - neighbors.length)) {
+      node.connect(ip, port, () => {
+        console.log(`🕷️ Connection to ${ip} established (network random rebalance).`);
+      });
+    }
+  }, 30000);
+});
+
 // Step 3: Let the user know what they can do in a generic manner
 // Since there are more commands for this app than chat - I guess
 // it makes sense to let every command' implementation have their
@@ -127,8 +193,10 @@ node.on('broadcast', ({ origin, message: { type, meta }}) => {
   }
 });
 
-node.on('direct', ({ origin, message: { type, meta: { name, size, hash } }}) => {
+node.on('direct', ({ origin, message: { type, meta }}) => {
   if (type === 'search/response') {
+    const { name, size, hash } = meta;
+
     console.log(`  ${name} ${formatSize(size)} ${hash}`);
   }
 });
@@ -190,7 +258,6 @@ node.on('direct', ({ origin, message: { type, meta } }) => {
 const FILES_SERVER_PORT = 9019;
 const CHUNK_SIZE = 512;
 
-if (port === 8002) {
 const filesServer = net.createServer((socket) => {
   socket.pipe(splitStream()).on('data', async ({ hash, offset }) => {
     const data = index.get(hash);
@@ -204,7 +271,6 @@ const filesServer = net.createServer((socket) => {
     socket.write(JSON.stringify({ hash, offset, chunk }));
   });
 }).listen(FILES_SERVER_PORT);
-}
 
 const downloadChunk = (socket, hash, offset) => new Promise((resolve) => {
   const socketSplitStream = socket.pipe(splitStream());
