@@ -61,7 +61,11 @@ node.close(() => {
 
 ### Chat
 
-Run chat application with `node examples/chat PORT`. If you want to test it locally, run several instances of the chat and connect them using `connection IP:PORT` to any other instances, creating a p2p network. Send a message simply typing anything in the console.
+Run chat application with `node examples/chat PORT`. If you want to test it locally, run several instances of the chat and connect them using `connect IP:PORT` to any other instances, creating a p2p network. Send a message simply typing anything in the console.
+
+### Torrent
+
+See more about torrent application [here](https://github.com/swensson/swenssonp2p/tree/master/examples/torrent).
 
 ## Other
 
