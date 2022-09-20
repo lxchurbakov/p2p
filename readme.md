@@ -5,7 +5,7 @@ Lightweight library that will let you create a p2p network with ease.
 ## Usage
 
 ```
-const createp2pnode = require('swenssonp2p');
+const createp2pnode = require('@swensson/p2p');
 
 const node = createp2pnode();
 

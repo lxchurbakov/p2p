@@ -1,16 +1,16 @@
 {
-  "name": "swenssonp2p",
+  "name": "@swensson/p2p",
   "version": "1.1.0",
   "description": "Lightweight P2P libary for Node",
   "main": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/swensson/swenssonp2p.git"
+    "url": "git+https://github.com/swensson/p2p.git"
   },
   "author": "swensson",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/swensson/swenssonp2p/issues"
+    "url": "https://github.com/swensson/p2p/issues"
   },
-  "homepage": "https://github.com/swensson/swenssonp2p#readme"
+  "homepage": "https://github.com/swensson/p2p#readme"
 }
