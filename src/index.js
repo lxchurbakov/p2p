@@ -2,8 +2,13 @@ const net = require('net');
 const EventEmitter = require('events');
 const splitStream = require('./split-stream');
 
-const random4digithex = () => Math.random().toString(16).split('.')[1].substr(0, 4);
-const randomuuid = () => new Array(8).fill(0).map(() => random4digithex()).join('-');
+const random4DigitHex = () =>
+  Math.random().toString(16).split('.')[1].substr(0, 4);
+const randomUUID = () =>
+  new Array(8)
+    .fill(0)
+    .map(() => random4DigitHex())
+    .join('-');
 
 module.exports = (options) => {
   //
@@ -16,7 +21,7 @@ module.exports = (options) => {
   // Handle all TCP connections same way, no matter
   // if it's incoming or outcoming, we're p2p
   const handleNewSocket = (socket) => {
-    const connectionId = randomuuid();
+    const connectionId = randomUUID();
 
     connections.set(connectionId, socket);
     emitter.emit('_connect', connectionId);
@@ -41,14 +46,15 @@ module.exports = (options) => {
     const socket = connections.get(connectionId);
 
     if (!socket) {
-      throw new Error(`Attempt to send data to connection that does not exist ${connectionId}`);
+      throw new Error(
+        `Attempt to send data to connection that does not exist ${connectionId}`
+      );
     }
 
     socket.write(JSON.stringify(message));
   };
 
-  // A method for the libabry consumer to
-  // esstablish connection to other nodes
+  // A method for the library consumer to establish connection to other nodes
   const connect = (ip, port, cb) => {
     const socket = new net.Socket();
 
@@ -83,7 +89,7 @@ module.exports = (options) => {
   // Layer 2 - create Nodes, assign IDs, handshake
   // and keep neighbors in a collection
   //
-  const NODE_ID = randomuuid();
+  const NODE_ID = randomUUID();
   const neighbors = new Map();
 
   // A helper to find node id by connection id
@@ -131,7 +137,7 @@ module.exports = (options) => {
   });
 
   // Finally we send data to the node
-  // by finnding it's connection and using _send
+  // by finding it's connection and using _send
   const send = (nodeId, data) => {
     const connectionId = neighbors.get(nodeId);
 
@@ -146,7 +152,7 @@ module.exports = (options) => {
   //
   const alreadySeenMessages = new Set();
 
-  // A method to send packet to other nodes (all neightbors)
+  // A method to send packet to other nodes (all neighbors)
   const sendPacket = (packet) => {
     for (const $nodeId of neighbors.keys()) {
       send($nodeId, packet);
@@ -155,11 +161,22 @@ module.exports = (options) => {
 
   // 2 methods to send data either to all nodes in the network
   // or to a specific node (direct message)
-  const broadcast = (message, id = randomuuid(), origin = NODE_ID, ttl = 255) => {
+  const broadcast = (
+    message,
+    id = randomUUID(),
+    origin = NODE_ID,
+    ttl = 255
+  ) => {
     sendPacket({ id, ttl, type: 'broadcast', message, origin });
   };
 
-  const direct = (destination, message, id = randomuuid(), origin = NODE_ID, ttl = 255) => {
+  const direct = (
+    destination,
+    message,
+    id = randomUUID(),
+    origin = NODE_ID,
+    ttl = 255
+  ) => {
     sendPacket({ id, ttl, type: 'direct', message, destination, origin });
   };
 
@@ -178,7 +195,10 @@ module.exports = (options) => {
     // Let's pop up the broadcast message and send it
     // forward on the chain
     if (packet.type === 'broadcast') {
-      emitter.emit('broadcast', { message: packet.message, origin: packet.origin });
+      emitter.emit('broadcast', {
+        message: packet.message,
+        origin: packet.origin,
+      });
       broadcast(packet.message, packet.id, packet.origin, packet.ttl - 1);
     }
 
@@ -186,16 +206,28 @@ module.exports = (options) => {
     // for us and send it forward if not
     if (packet.type === 'direct') {
       if (packet.destination === NODE_ID) {
-        emitter.emit('direct', { origin: packet.origin, message: packet.message });
+        emitter.emit('direct', {
+          origin: packet.origin,
+          message: packet.message,
+        });
       } else {
-        direct(packet.destination, packet.message, packet.id, packet.origin, packet.ttl - 1);
+        direct(
+          packet.destination,
+          packet.message,
+          packet.id,
+          packet.origin,
+          packet.ttl - 1
+        );
       }
     }
   });
 
   return {
-    listen, connect, close,
-    broadcast, direct,
+    listen,
+    connect,
+    close,
+    broadcast,
+    direct,
     on: emitter.on.bind(emitter),
     off: emitter.off.bind(emitter),
     id: NODE_ID,

@@ -22,7 +22,7 @@ node.connect(IP, PORT, () => {
 // Send message to everyone
 // data can be anything that
 // you can JSON.stringify
-node.broacast(data);
+node.broadcast(data);
 
 // Send message to specific node
 // data can be anything that

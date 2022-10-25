@@ -9,7 +9,7 @@ const CONNECTIONS_PER_NODE = 3;
 
 // Since we don't have module level
 // await yet, wrap stuff in an async function
-;(async () => {
+(async () => {
   //
   //  Step 1. Setup network
   //
@@ -31,20 +31,26 @@ const CONNECTIONS_PER_NODE = 3;
   );
 
   const edges = [];
-  const countAppearances = (id) => edges.filter((edge) => edge.includes(id)).length;
-  const hasEdge = (edge) => !!edges.find((e) => {
-    return (
-      (e[0] === edge[0] && e[1] === edge[1])
-      || (e[1] === edge[0] && e[0] === edge[1])
-    );
-  });
+  const countAppearances = (id) =>
+    edges.filter((edge) => edge.includes(id)).length;
+  const hasEdge = (edge) =>
+    !!edges.find((e) => {
+      return (
+        (e[0] === edge[0] && e[1] === edge[1]) ||
+        (e[1] === edge[0] && e[0] === edge[1])
+      );
+    });
 
   nodes.forEach((node) => {
     while (countAppearances(node.NODE_ID) < CONNECTIONS_PER_NODE) {
-      const secondNode = randomItem(nodes.filter((node) => countAppearances(node.NODE_ID) < CONNECTIONS_PER_NODE));
+      const secondNode = randomItem(
+        nodes.filter(
+          (node) => countAppearances(node.NODE_ID) < CONNECTIONS_PER_NODE
+        )
+      );
 
       // if (!hasEdge([node.NODE_ID, secondNode.NODE_ID])) {
-        edges.push([node.NODE_ID, secondNode.NODE_ID]);
+      edges.push([node.NODE_ID, secondNode.NODE_ID]);
       // }
       // console.log('loop', secondNode)
     }
@@ -64,8 +70,6 @@ const CONNECTIONS_PER_NODE = 3;
     });
   }
 
-
-
   // Connect each node with N other nodes
   // in a random fashion
   // await nodes.reduce(async (acc, node, index) => {
@@ -73,7 +77,7 @@ const CONNECTIONS_PER_NODE = 3;
   //   let randomIndex;
   //   let connected = [];
   //
-  //   // Repeate the amount of times we need each node
+  //   // Repeat the amount of times we need each node
   //   // to be connected to others
   //   while (node.neighbors.size < Math.random() * CONNECTIONS_PER_NODE) {
   //     // Generate random index while we find the one we are not
@@ -113,8 +117,8 @@ const CONNECTIONS_PER_NODE = 3;
     // Fill in the nodes (basically this should not update, but I put this here for consistency)
     stats.nodes = nodes.map((node) => node.NODE_ID);
 
-    // Fill in the edges data (and yes, each edge will appear twise)
-    stats.edges = []
+    // Fill in the edges data (and yes, each edge will appear twice)
+    stats.edges = [];
 
     nodes.forEach((node) => {
       for (let neighborNodeId of node.neighbors.keys()) {
@@ -138,38 +142,36 @@ const CONNECTIONS_PER_NODE = 3;
   //   });
   // });
 
-  const sendRandomMessage = () => new Promise((resolve) => {
-    const nodeFrom = Math.floor(Math.random() * NODES_COUNT);
-    const nodeTo   = Math.floor(Math.random() * NODES_COUNT);
+  const sendRandomMessage = () =>
+    new Promise((resolve) => {
+      const nodeFrom = Math.floor(Math.random() * NODES_COUNT);
+      const nodeTo = Math.floor(Math.random() * NODES_COUNT);
 
-    nodes[nodeTo].once('direct', ({ origin }) => {
-      if (origin === nodes[nodeFrom].NODE_ID) {
-        resolve();
-      }
+      nodes[nodeTo].once('direct', ({ origin }) => {
+        if (origin === nodes[nodeFrom].NODE_ID) {
+          resolve();
+        }
+      });
+
+      nodes[nodeFrom].direct(nodes[nodeTo].NODE_ID, 'dummy data');
     });
-
-    nodes[nodeFrom].direct(nodes[nodeTo].NODE_ID, 'dummy data');
-  });
 
   setInterval(() => {
     stats.mps = Math.floor((messagesSent + 3 * stats.mps) / 4);
     messagesSent = 0;
   }, 1000);
 
-  ;(async () => {
+  (async () => {
     while (true) {
       await sendRandomMessage();
       messagesSent++;
     }
   })();
 
-
   // nodes[1].on('direct',({ origin, message }) => {
   //   console.log({ origin, message }, nodes[0].NODE_ID)
   // });
   // nodes[0].direct(nodes[1].NODE_ID, 'something');
-
-
 
   //
   // /A place
@@ -184,24 +186,26 @@ const CONNECTIONS_PER_NODE = 3;
   const path = require('path');
 
   // create a server object:
-  const server = http.createServer(function (req, res) {
-    if (req.url === '/stats') {
-      res.write(JSON.stringify(stats));
-      res.end();
-    } else if (req.url === '/client.js') {
-      fs.createReadStream(path.resolve(__dirname, './client.js')).pipe(res);
-    } else {
-      fs.createReadStream(path.resolve(__dirname, './index.html')).pipe(res);
-    }
-  }).listen(7999, () => {
-    console.log('Server is up at 7999')
-  });
+  const server = http
+    .createServer(function (req, res) {
+      if (req.url === '/stats') {
+        res.write(JSON.stringify(stats));
+        res.end();
+      } else if (req.url === '/client.js') {
+        fs.createReadStream(path.resolve(__dirname, './client.js')).pipe(res);
+      } else {
+        fs.createReadStream(path.resolve(__dirname, './index.html')).pipe(res);
+      }
+    })
+    .listen(7999, () => {
+      console.log('Server is up at 7999');
+    });
 
   //
   // Handle CTRL C to gracefully shut everything down
   //
   process.on('SIGINT', async () => {
-    console.log("\nGracefully shutting everything down...");
+    console.log('\nGracefully shutting everything down...');
 
     // // Shut down the network http server
     // await new Promise((resolve) => {

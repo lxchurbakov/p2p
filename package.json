@@ -1,7 +1,7 @@
 {
   "name": "@swensson/p2p",
   "version": "1.1.0",
-  "description": "Lightweight P2P libary for Node",
+  "description": "Lightweight P2P library for Node",
   "main": "src/index.js",
   "repository": {
     "type": "git",
