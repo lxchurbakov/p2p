@@ -15,7 +15,12 @@ if (isNaN(port)) {
 // know how to connect to other nodes and send messages
 const node = createNode();
 const emitter = new EventEmitter();
-let name = randomItem(['Gorgeous', 'Elegant', 'Phantastic', 'Smart']) + ' ' + randomItem(['pine', 'oak', 'spruce']) + ' from ' + randomItem(['Paris', 'Berlin', 'Belgrade', 'Ljubljana']);
+let name =
+  randomItem(['Gorgeous', 'Elegant', 'Fantastic', 'Smart']) +
+  ' ' +
+  randomItem(['pine', 'oak', 'spruce']) +
+  ' from ' +
+  randomItem(['Paris', 'Berlin', 'Belgrade', 'Ljubljana']);
 
 // Start local node and print help
 node.listen(port, () => {
@@ -43,26 +48,26 @@ node.listen(port, () => {
     const text = data.toString().trim();
 
     if (text.startsWith('connect')) {
-      const [,ipport] = text.split(' ');
-      const [ip, port] = ipport.split(':');
+      const [, ipPort] = text.split(' ');
+      const [ip, port] = ipPort.split(':');
 
       console.log(`Connecting to ${ip} at ${Number(port)}...`);
       node.connect(ip, Number(port), () => {
         console.log(`Connection to ${ip} established.`);
       });
     } else if (text.startsWith('name')) {
-      [,name] = text.split(' ');
+      [, name] = text.split(' ');
       console.log(`Name changed to "${name}"`);
     } else {
       node.broadcast({ name, text });
-      console.log(`${"\033[F"}You: ${text}`);
+      console.log(`${'\033[F'}You: ${text}`);
     }
   });
 });
 
 // Handle CTRL C to gracefully shut everything down
 process.on('SIGINT', async () => {
-  console.log("\nGracefully shutting chat node down...");
+  console.log('\nGracefully shutting chat node down...');
 
   node.close(() => {
     process.exit();

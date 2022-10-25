@@ -1,6 +1,7 @@
 // Couple of handlers
 const fetchStats = () => fetch('/stats').then((data) => data.json());
-const distance = (a, b) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+const distance = (a, b) =>
+  Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 
 //
 // Setup canvas for rendering
@@ -12,16 +13,14 @@ if (!canvas) {
 }
 
 const { width, height } = canvas.getBoundingClientRect();
-const pixelDensity = window.devicePixelRatio || 1.0
+const pixelDensity = window.devicePixelRatio || 1.0;
 
 canvas.width = width * pixelDensity;
-canvas.height = height * pixelDensity;;
+canvas.height = height * pixelDensity;
 
 const context = canvas.getContext('2d');
 
 context.scale(pixelDensity, pixelDensity);
-
-
 
 //
 // Start rendering cycle
@@ -40,15 +39,18 @@ const updateState = async () => {
 
   // enter/update nodes
   stats.nodes.forEach((id) => {
-    nodes[id] = nodes[id] || { x: Math.random() + width / 2, y: Math.random() + height / 2 };
+    nodes[id] = nodes[id] || {
+      x: Math.random() + width / 2,
+      y: Math.random() + height / 2,
+    };
   });
 
   // exit nodes
   Object.keys(nodes).forEach((id) => {
     if (!stats.nodes.includes(id)) {
       delete nodes[id];
-    // } else {
-    //   delete nodes[id];
+      // } else {
+      //   delete nodes[id];
     }
   });
 
@@ -78,7 +80,7 @@ const updateView = () => {
 
   // Edges push nodes closer
   for (let [i, j] of edges) {
-    const factor = .000001 * Math.pow(distance(nodes[i], nodes[j]), 2);
+    const factor = 0.000001 * Math.pow(distance(nodes[i], nodes[j]), 2);
 
     nodes[i].x -= factor * (nodes[i].x - nodes[j].x);
     nodes[i].y -= factor * (nodes[i].y - nodes[j].y);
@@ -86,8 +88,8 @@ const updateView = () => {
 
   // Canvas edges push nodes further from them
   for (let i of Object.keys(nodes)) {
-    const horizontalForce = .000001 * Math.pow(nodes[i].x - width / 2, 2);
-    const verticalForce = .000001 * Math.pow(nodes[i].y - height / 2, 2);
+    const horizontalForce = 0.000001 * Math.pow(nodes[i].x - width / 2, 2);
+    const verticalForce = 0.000001 * Math.pow(nodes[i].y - height / 2, 2);
 
     nodes[i].x -= horizontalForce * (nodes[i].x - width / 2);
     nodes[i].y -= verticalForce * (nodes[i].y - height / 2);
@@ -123,7 +125,11 @@ const render = () => {
 
   context.textAlign = 'center';
   context.font = '18px monospace';
-  context.fillText('Messages per second:' + mps.toString(), width / 2, height - 50);
+  context.fillText(
+    'Messages per second:' + mps.toString(),
+    width / 2,
+    height - 50
+  );
 
   requestAnimationFrame(render);
 };

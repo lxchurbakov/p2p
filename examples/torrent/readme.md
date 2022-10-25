@@ -16,7 +16,7 @@ This will look up for files all over the network. The output will look like the 
  readme.md 1.72KB 75bc3ba63bf0fe60bac941e5dfa947ade1e10b07efe14f62fcc586c4578fc143
 ```
 
-Note the filehash (`75bc...`). You need this for the next command.
+Note the file hash (`75bc...`). You need this for the next command.
 
 #### download FILEHASH
 
